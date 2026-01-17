@@ -1,0 +1,99 @@
+# ===================================================================
+# DORMEX - Git Ignore Configuration
+# ===================================================================
+
+# ===================================================================
+# Environment & Secrets (CRITICAL - NEVER COMMIT)
+# ===================================================================
+.env
+.env.local
+.env.*.local
+*.env
+application-local.properties
+application-local.yml
+secrets/
+*.pem
+*.key
+
+# ===================================================================
+# Maven Build Output
+# ===================================================================
+target/
+!.mvn/wrapper/maven-wrapper.jar
+!**/src/main/**/target/
+!**/src/test/**/target/
+
+# ===================================================================
+# IDE Files
+# ===================================================================
+# IntelliJ IDEA
+.idea/
+*.iws
+*.iml
+*.ipr
+out/
+
+# Eclipse
+.apt_generated
+.classpath
+.factorypath
+.project
+.settings
+.springBeans
+.sts4-cache
+bin/
+
+# VS Code
+.vscode/
+*.code-workspace
+
+# NetBeans
+/nbproject/private/
+/nbbuild/
+/dist/
+/nbdist/
+/.nb-gradle/
+
+# ===================================================================
+# OS Generated Files
+# ===================================================================
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+*.swp
+*.swo
+*~
+
+# ===================================================================
+# Logs
+# ===================================================================
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# ===================================================================
+# Test Output
+# ===================================================================
+/coverage/
+*.lcov
+test-output/
+surefire-reports/
+
+# ===================================================================
+# Misc
+# ===================================================================
+*.class
+*.jar
+*.war
+*.ear
+*.zip
+*.tar.gz
+*.rar
+hs_err_pid*
+replay_pid*
