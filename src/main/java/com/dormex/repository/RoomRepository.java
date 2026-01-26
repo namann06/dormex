@@ -35,6 +35,8 @@ public interface RoomRepository extends JpaRepository<Room, Long> {
     @Query("SELECT COUNT(r) FROM Room r WHERE r.status = 'FULL'")
     long countFullRooms();
 
+    long countByStatus(RoomStatus status);
+
     @Query("SELECT SUM(r.capacity) FROM Room r WHERE r.status != 'UNDER_MAINTENANCE'")
     Long getTotalCapacity();
 
