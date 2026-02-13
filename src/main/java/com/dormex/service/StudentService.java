@@ -3,6 +3,7 @@ package com.dormex.service;
 import com.dormex.dto.student.CreateStudentRequest;
 import com.dormex.dto.student.StudentResponse;
 import com.dormex.dto.student.UpdateStudentRequest;
+import com.dormex.entity.Room;
 import com.dormex.entity.Student;
 import com.dormex.entity.User;
 import com.dormex.entity.enums.AuthProvider;
@@ -10,6 +11,7 @@ import com.dormex.entity.enums.Role;
 import com.dormex.entity.enums.StudentStatus;
 import com.dormex.exception.BadRequestException;
 import com.dormex.exception.ResourceNotFoundException;
+import com.dormex.repository.RoomRepository;
 import com.dormex.repository.StudentRepository;
 import com.dormex.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -26,6 +28,7 @@ public class StudentService {
 
     private final StudentRepository studentRepository;
     private final UserRepository userRepository;
+    private final RoomRepository roomRepository;
     private final PasswordEncoder passwordEncoder;
 
     @Transactional
@@ -164,6 +167,12 @@ public class StudentService {
 
     private StudentResponse mapToResponse(Student student) {
         User user = student.getUser();
+        String roomNumber = null;
+        if (student.getRoomId() != null) {
+            roomNumber = roomRepository.findById(student.getRoomId())
+                .map(Room::getRoomNumber)
+                .orElse(null);
+        }
         return StudentResponse.builder()
             .id(student.getId())
             .userId(user.getId())
@@ -180,6 +189,7 @@ public class StudentService {
             .joiningDate(student.getJoiningDate())
             .leavingDate(student.getLeavingDate())
             .roomId(student.getRoomId())
+            .roomNumber(roomNumber)
             .status(student.getStatus())
             .profilePicture(user.getProfilePicture())
             .createdAt(student.getCreatedAt())

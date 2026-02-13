@@ -44,12 +44,12 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
             user.setProfilePicture(picture);
             user = userRepository.save(user);
         } else {
-            // Create new user from Google OAuth
+            // Create new user from Google OAuth - Google users are ADMIN by default
             user = User.builder()
                 .name(name)
                 .email(email)
                 .authProvider(AuthProvider.GOOGLE)
-                .role(Role.STUDENT)
+                .role(Role.ADMIN)
                 .profilePicture(picture)
                 .enabled(true)
                 .build();
