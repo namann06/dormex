@@ -38,7 +38,6 @@ public class UserController {
             .name(user.getName())
             .email(user.getEmail())
             .role(user.getRole())
-            .profilePicture(user.getProfilePicture())
             .build();
 
         return ResponseEntity.ok(ApiResponse.success(userInfo));
