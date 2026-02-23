@@ -52,9 +52,6 @@ public class User {
     @Builder.Default
     private AuthProvider authProvider = AuthProvider.LOCAL;
 
-    @Column(length = 255)
-    private String profilePicture;
-
     @Builder.Default
     @Column(nullable = false)
     private boolean enabled = true;

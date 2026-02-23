@@ -32,7 +32,6 @@ public class StudentResponse {
     private Long roomId;
     private String roomNumber;
     private StudentStatus status;
-    private String profilePicture;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 }
