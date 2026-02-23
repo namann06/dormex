@@ -118,6 +118,7 @@ public class StudentService {
         if (request.getGuardianName() != null) student.setGuardianName(request.getGuardianName());
         if (request.getGuardianPhone() != null) student.setGuardianPhone(request.getGuardianPhone());
         if (request.getDateOfBirth() != null) student.setDateOfBirth(request.getDateOfBirth());
+        if (request.getJoiningDate() != null) student.setJoiningDate(request.getJoiningDate());
 
         student = studentRepository.save(student);
         return mapToResponse(student);
@@ -191,7 +192,6 @@ public class StudentService {
             .roomId(student.getRoomId())
             .roomNumber(roomNumber)
             .status(student.getStatus())
-            .profilePicture(user.getProfilePicture())
             .createdAt(student.getCreatedAt())
             .updatedAt(student.getUpdatedAt())
             .build();
