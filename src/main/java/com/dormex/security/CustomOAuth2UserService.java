@@ -32,7 +32,6 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
         Map<String, Object> attributes = oAuth2User.getAttributes();
         String email = (String) attributes.get("email");
         String name = (String) attributes.get("name");
-        String picture = (String) attributes.get("picture");
 
         Optional<User> userOptional = userRepository.findByEmail(email);
         User user;
@@ -41,7 +40,6 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
             user = userOptional.get();
             // Update existing user's info from Google
             user.setName(name);
-            user.setProfilePicture(picture);
             user = userRepository.save(user);
         } else {
             // Create new user from Google OAuth - Google users are ADMIN by default
@@ -50,7 +48,6 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
                 .email(email)
                 .authProvider(AuthProvider.GOOGLE)
                 .role(Role.ADMIN)
-                .profilePicture(picture)
                 .enabled(true)
                 .build();
             user = userRepository.save(user);
