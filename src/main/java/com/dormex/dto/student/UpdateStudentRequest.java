@@ -35,4 +35,6 @@ public class UpdateStudentRequest {
     private String guardianPhone;
 
     private LocalDate dateOfBirth;
+
+    private LocalDate joiningDate;
 }
