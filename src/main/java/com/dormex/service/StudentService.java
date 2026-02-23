@@ -111,6 +111,13 @@ public class StudentService {
             user.setName(request.getName());
             userRepository.save(user);
         }
+        if (request.getRollNumber() != null) {
+            if (!request.getRollNumber().equals(student.getRollNumber())
+                    && studentRepository.existsByRollNumber(request.getRollNumber())) {
+                throw new BadRequestException("Roll number already exists");
+            }
+            student.setRollNumber(request.getRollNumber());
+        }
         if (request.getPhone() != null) student.setPhone(request.getPhone());
         if (request.getDepartment() != null) student.setDepartment(request.getDepartment());
         if (request.getYear() != null) student.setYear(request.getYear());

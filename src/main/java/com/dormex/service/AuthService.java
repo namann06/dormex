@@ -4,10 +4,13 @@ import com.dormex.dto.auth.AuthResponse;
 import com.dormex.dto.auth.LoginRequest;
 import com.dormex.dto.auth.RefreshTokenRequest;
 import com.dormex.dto.auth.RegisterRequest;
+import com.dormex.entity.Student;
 import com.dormex.entity.User;
 import com.dormex.entity.enums.AuthProvider;
 import com.dormex.entity.enums.Role;
+import com.dormex.entity.enums.StudentStatus;
 import com.dormex.exception.BadRequestException;
+import com.dormex.repository.StudentRepository;
 import com.dormex.repository.UserRepository;
 import com.dormex.security.JwtService;
 import lombok.RequiredArgsConstructor;
@@ -23,6 +26,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class AuthService {
 
     private final UserRepository userRepository;
+    private final StudentRepository studentRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
     private final AuthenticationManager authenticationManager;
@@ -46,6 +50,17 @@ public class AuthService {
             .build();
 
         user = userRepository.save(user);
+
+        // Auto-create student profile when registering a student
+        if (role == Role.STUDENT) {
+            Student student = Student.builder()
+                .user(user)
+                .rollNumber(generateRollNumber())
+                .status(StudentStatus.ACTIVE)
+                .build();
+            studentRepository.save(student);
+        }
+
         return generateAuthResponse(user);
     }
 
@@ -78,6 +93,10 @@ public class AuthService {
         return generateAuthResponse(user);
     }
 
+    private String generateRollNumber() {
+        return "STU" + System.currentTimeMillis();
+    }
+
     private AuthResponse generateAuthResponse(User user) {
         String accessToken = jwtService.generateToken(user.getId(), user.getEmail());
         String refreshToken = jwtService.generateRefreshToken(user.getId(), user.getEmail());
@@ -92,7 +111,6 @@ public class AuthService {
                 .name(user.getName())
                 .email(user.getEmail())
                 .role(user.getRole())
-                .profilePicture(user.getProfilePicture())
                 .build())
             .build();
     }

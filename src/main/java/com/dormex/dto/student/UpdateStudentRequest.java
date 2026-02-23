@@ -16,6 +16,9 @@ public class UpdateStudentRequest {
     @Size(min = 2, max = 100)
     private String name;
 
+    @Size(max = 20)
+    private String rollNumber;
+
     @Pattern(regexp = "^[0-9]{10,15}$", message = "Invalid phone number")
     private String phone;
 
