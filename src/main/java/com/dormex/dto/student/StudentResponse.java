@@ -31,6 +31,7 @@ public class StudentResponse {
     private LocalDate leavingDate;
     private Long roomId;
     private String roomNumber;
+    private String blockName;
     private StudentStatus status;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
