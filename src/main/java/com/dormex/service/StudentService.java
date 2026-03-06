@@ -11,6 +11,7 @@ import com.dormex.entity.enums.Role;
 import com.dormex.entity.enums.StudentStatus;
 import com.dormex.exception.BadRequestException;
 import com.dormex.exception.ResourceNotFoundException;
+import com.dormex.repository.ComplaintRepository;
 import com.dormex.repository.RoomRepository;
 import com.dormex.repository.StudentRepository;
 import com.dormex.repository.UserRepository;
@@ -29,6 +30,7 @@ public class StudentService {
     private final StudentRepository studentRepository;
     private final UserRepository userRepository;
     private final RoomRepository roomRepository;
+    private final ComplaintRepository complaintRepository;
     private final PasswordEncoder passwordEncoder;
 
     @Transactional
@@ -138,6 +140,13 @@ public class StudentService {
 
         if (status == StudentStatus.LEFT || status == StudentStatus.TRANSFERRED) {
             student.setLeavingDate(LocalDate.now());
+            if (student.getRoomId() != null) {
+                roomRepository.findById(student.getRoomId()).ifPresent(room -> {
+                    room.setCurrentOccupancy(Math.max(0, room.getCurrentOccupancy() - 1));
+                    room.updateStatus();
+                    roomRepository.save(room);
+                });
+            }
             student.setRoomId(null);
         }
 
@@ -153,6 +162,25 @@ public class StudentService {
             throw new BadRequestException("Cannot assign room to non-active student");
         }
 
+        // Decrement old room occupancy if student had a room
+        if (student.getRoomId() != null) {
+            roomRepository.findById(student.getRoomId()).ifPresent(oldRoom -> {
+                oldRoom.setCurrentOccupancy(Math.max(0, oldRoom.getCurrentOccupancy() - 1));
+                oldRoom.updateStatus();
+                roomRepository.save(oldRoom);
+            });
+        }
+
+        // Increment new room occupancy
+        Room newRoom = roomRepository.findById(roomId)
+            .orElseThrow(() -> new BadRequestException("Room not found"));
+        if (newRoom.getCurrentOccupancy() >= newRoom.getCapacity()) {
+            throw new BadRequestException("Room is at full capacity");
+        }
+        newRoom.setCurrentOccupancy(newRoom.getCurrentOccupancy() + 1);
+        newRoom.updateStatus();
+        roomRepository.save(newRoom);
+
         student.setRoomId(roomId);
         student = studentRepository.save(student);
         return mapToResponse(student);
@@ -163,6 +191,15 @@ public class StudentService {
         Student student = findStudentById(id);
         User user = student.getUser();
 
+        if (student.getRoomId() != null) {
+            roomRepository.findById(student.getRoomId()).ifPresent(room -> {
+                room.setCurrentOccupancy(Math.max(0, room.getCurrentOccupancy() - 1));
+                room.updateStatus();
+                roomRepository.save(room);
+            });
+        }
+
+        complaintRepository.deleteAll(complaintRepository.findByStudentIdOrderByCreatedAtDesc(student.getId()));
         studentRepository.delete(student);
         user.setEnabled(false);
         userRepository.save(user);
@@ -176,10 +213,13 @@ public class StudentService {
     private StudentResponse mapToResponse(Student student) {
         User user = student.getUser();
         String roomNumber = null;
+        String blockName = null;
         if (student.getRoomId() != null) {
-            roomNumber = roomRepository.findById(student.getRoomId())
-                .map(Room::getRoomNumber)
-                .orElse(null);
+            Room room = roomRepository.findById(student.getRoomId()).orElse(null);
+            if (room != null) {
+                roomNumber = room.getRoomNumber();
+                blockName = room.getBlock() != null ? room.getBlock().getName() : null;
+            }
         }
         return StudentResponse.builder()
             .id(student.getId())
@@ -198,6 +238,7 @@ public class StudentService {
             .leavingDate(student.getLeavingDate())
             .roomId(student.getRoomId())
             .roomNumber(roomNumber)
+            .blockName(blockName)
             .status(student.getStatus())
             .createdAt(student.getCreatedAt())
             .updatedAt(student.getUpdatedAt())
