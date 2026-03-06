@@ -34,20 +34,21 @@ public class JwtService {
     }
 
     public String generateToken(Long userId, String email) {
-        return buildToken(userId, email, jwtExpiration);
+        return buildToken(userId, email, jwtExpiration, "access");
     }
 
     public String generateRefreshToken(Long userId, String email) {
-        return buildToken(userId, email, refreshExpiration);
+        return buildToken(userId, email, refreshExpiration, "refresh");
     }
 
-    private String buildToken(Long userId, String email, long expiration) {
+    private String buildToken(Long userId, String email, long expiration, String tokenType) {
         Date now = new Date();
         Date expiryDate = new Date(now.getTime() + expiration);
 
         return Jwts.builder()
             .subject(String.valueOf(userId))
             .claim("email", email)
+            .claim("type", tokenType)
             .issuedAt(now)
             .expiration(expiryDate)
             .signWith(key)
@@ -78,6 +79,15 @@ public class JwtService {
             log.error("JWT claims string is empty");
         }
         return false;
+    }
+
+    public boolean isRefreshToken(String token) {
+        try {
+            Claims claims = parseToken(token);
+            return "refresh".equals(claims.get("type", String.class));
+        } catch (Exception e) {
+            return false;
+        }
     }
 
     private Claims parseToken(String token) {
