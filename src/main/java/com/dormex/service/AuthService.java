@@ -86,6 +86,10 @@ public class AuthService {
             throw new BadRequestException("Invalid or expired refresh token");
         }
 
+        if (!jwtService.isRefreshToken(refreshToken)) {
+            throw new BadRequestException("Invalid token type: expected refresh token");
+        }
+
         Long userId = jwtService.getUserIdFromToken(refreshToken);
         User user = userRepository.findById(userId)
             .orElseThrow(() -> new BadRequestException("User not found"));
@@ -111,6 +115,7 @@ public class AuthService {
                 .name(user.getName())
                 .email(user.getEmail())
                 .role(user.getRole())
+                .hasStudentProfile(studentRepository.existsByUserId(user.getId()))
                 .build())
             .build();
     }
