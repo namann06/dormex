@@ -9,6 +9,7 @@ import com.dormex.entity.enums.RoomStatus;
 import com.dormex.exception.BadRequestException;
 import com.dormex.exception.ResourceNotFoundException;
 import com.dormex.repository.RoomRepository;
+import com.dormex.repository.StudentRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -21,6 +22,7 @@ public class RoomService {
 
     private final RoomRepository roomRepository;
     private final BlockService blockService;
+    private final StudentRepository studentRepository;
 
     @Transactional
     public RoomResponse createRoom(CreateRoomRequest request) {
@@ -157,6 +159,11 @@ public class RoomService {
     }
 
     private RoomResponse mapToResponse(Room room) {
+        List<String> studentNames = studentRepository.findActiveByRoomId(room.getId())
+            .stream()
+            .map(s -> s.getUser().getName())
+            .toList();
+
         return RoomResponse.builder()
             .id(room.getId())
             .blockId(room.getBlock().getId())
@@ -170,6 +177,7 @@ public class RoomService {
             .roomType(room.getRoomType())
             .amenities(room.getAmenities())
             .createdAt(room.getCreatedAt())
+            .studentNames(studentNames)
             .build();
     }
 }
