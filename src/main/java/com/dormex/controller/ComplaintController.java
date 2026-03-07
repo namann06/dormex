@@ -57,7 +57,8 @@ public class ComplaintController {
     }
 
     @GetMapping("/{id}")
-    @Operation(summary = "Get complaint by ID")
+    @PreAuthorize("hasRole('ADMIN')")
+    @Operation(summary = "Get complaint by ID (Admin only)")
     public ResponseEntity<ApiResponse<ComplaintResponse>> getComplaintById(@PathVariable Long id) {
         ComplaintResponse response = complaintService.getComplaintById(id);
         return ResponseEntity.ok(ApiResponse.success(response));
