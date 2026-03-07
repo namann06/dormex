@@ -31,7 +31,8 @@ public class DashboardController {
     @Operation(summary = "Get recent activity")
     public ResponseEntity<ApiResponse<RecentActivity>> getRecentActivity(
             @RequestParam(defaultValue = "5") int limit) {
-        return ResponseEntity.ok(ApiResponse.success("Recent activity retrieved", dashboardService.getRecentActivity(limit)));
+        int boundedLimit = Math.min(Math.max(limit, 1), 50);
+        return ResponseEntity.ok(ApiResponse.success("Recent activity retrieved", dashboardService.getRecentActivity(boundedLimit)));
     }
 
     @GetMapping("/block-occupancy")
