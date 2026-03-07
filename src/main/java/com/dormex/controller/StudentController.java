@@ -44,14 +44,16 @@ public class StudentController {
     }
 
     @GetMapping("/{id}")
-    @Operation(summary = "Get student by ID")
+    @PreAuthorize("hasRole('ADMIN')")
+    @Operation(summary = "Get student by ID (Admin only)")
     public ResponseEntity<ApiResponse<StudentResponse>> getStudentById(@PathVariable Long id) {
         StudentResponse response = studentService.getStudentById(id);
         return ResponseEntity.ok(ApiResponse.success(response));
     }
 
     @GetMapping("/roll/{rollNumber}")
-    @Operation(summary = "Get student by roll number")
+    @PreAuthorize("hasRole('ADMIN')")
+    @Operation(summary = "Get student by roll number (Admin only)")
     public ResponseEntity<ApiResponse<StudentResponse>> getStudentByRoll(@PathVariable String rollNumber) {
         StudentResponse response = studentService.getStudentByRollNumber(rollNumber);
         return ResponseEntity.ok(ApiResponse.success(response));
