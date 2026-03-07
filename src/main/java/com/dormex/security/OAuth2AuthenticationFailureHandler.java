@@ -28,7 +28,7 @@ public class OAuth2AuthenticationFailureHandler extends SimpleUrlAuthenticationF
 
         String frontendUrl = allowedOrigins.split(",")[0];
         String targetUrl = UriComponentsBuilder.fromUriString(frontendUrl + "/oauth2/callback")
-            .queryParam("error", exception.getLocalizedMessage())
+            .queryParam("error", "Authentication failed. Please try again.")
             .build().toUriString();
 
         getRedirectStrategy().sendRedirect(request, response, targetUrl);
