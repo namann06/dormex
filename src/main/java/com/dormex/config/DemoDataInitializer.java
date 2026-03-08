@@ -50,6 +50,7 @@ public class DemoDataInitializer implements CommandLineRunner {
         List<Block> blocks = createBlocks();
         List<Room> rooms = createRooms(blocks);
         List<Student> students = createStudents(rooms, 300);
+        syncRoomOccupancy(rooms);
         createComplaints(students);
 
         // Only insert mess menu if table is empty (unique constraint on day+meal)
@@ -133,12 +134,6 @@ public class DemoDataInitializer implements CommandLineRunner {
                 for (int r = 1; r <= roomsPerFloor; r++) {
                     int typeIdx = random.nextInt(roomTypes.length);
                     int capacity = capacities[typeIdx];
-                    int occupancy = random.nextInt(capacity + 1);
-
-                    RoomStatus status;
-                    if (occupancy == 0) status = RoomStatus.AVAILABLE;
-                    else if (occupancy >= capacity) status = RoomStatus.FULL;
-                    else status = RoomStatus.OCCUPIED;
 
                     String roomNumber = "" + blockLetter + floor + String.format("%02d", r);
 
@@ -147,8 +142,8 @@ public class DemoDataInitializer implements CommandLineRunner {
                             .roomNumber(roomNumber)
                             .floor(floor)
                             .capacity(capacity)
-                            .currentOccupancy(occupancy)
-                            .status(status)
+                            .currentOccupancy(0)
+                            .status(RoomStatus.AVAILABLE)
                             .roomType(roomTypes[typeIdx])
                             .amenities(String.join(", ", amenitySets[typeIdx]))
                             .build());
@@ -168,6 +163,9 @@ public class DemoDataInitializer implements CommandLineRunner {
         };
         String[] years = {"1st", "2nd", "3rd", "4th"};
         String[] deptCodes = {"CS", "EC", "ME", "CE", "IT", "EE"};
+
+        // Track how many students assigned per room to respect capacity
+        Map<Long, Integer> roomAssignCount = new HashMap<>();
 
         List<Student> students = new ArrayList<>();
         List<User> users = new ArrayList<>();
@@ -208,7 +206,17 @@ public class DemoDataInitializer implements CommandLineRunner {
             String phone = generatePhoneNumber();
             String guardianPhone = generatePhoneNumber();
 
-            Room room = rooms.get(random.nextInt(rooms.size()));
+            Room room = null;
+            for (int attempt = 0; attempt < rooms.size(); attempt++) {
+                Room candidate = rooms.get(random.nextInt(rooms.size()));
+                int assigned = roomAssignCount.getOrDefault(candidate.getId(), 0);
+                if (assigned < candidate.getCapacity()) {
+                    room = candidate;
+                    roomAssignCount.merge(candidate.getId(), 1, Integer::sum);
+                    break;
+                }
+            }
+            Long assignedRoomId = room != null ? room.getId() : null;
 
             User user = User.builder()
                     .name(name)
@@ -231,7 +239,7 @@ public class DemoDataInitializer implements CommandLineRunner {
                     .guardianPhone(guardianPhone)
                     .dateOfBirth(dob)
                     .joiningDate(LocalDate.of(admissionYear, 8, 1))
-                    .roomId(room.getId())
+                    .roomId(assignedRoomId)
                     .status(StudentStatus.ACTIVE)
                     .build();
             students.add(student);
@@ -241,6 +249,26 @@ public class DemoDataInitializer implements CommandLineRunner {
         studentRepository.saveAll(students);
         log.info("Created {} students", students.size());
         return students;
+    }
+
+    private void syncRoomOccupancy(List<Room> rooms) {
+        List<Student> allStudents = studentRepository.findAll();
+        Map<Long, Integer> roomStudentCount = new HashMap<>();
+        for (Student s : allStudents) {
+            if (s.getRoomId() != null && s.getStatus() == StudentStatus.ACTIVE) {
+                roomStudentCount.merge(s.getRoomId(), 1, Integer::sum);
+            }
+        }
+
+        for (Room room : rooms) {
+            int actualCount = roomStudentCount.getOrDefault(room.getId(), 0);
+            // Cap occupancy at capacity
+            int occupancy = Math.min(actualCount, room.getCapacity());
+            room.setCurrentOccupancy(occupancy);
+            room.updateStatus();
+        }
+        roomRepository.saveAll(rooms);
+        log.info("Synced room occupancy for {} rooms", rooms.size());
     }
 
     private void createComplaints(List<Student> students) {
