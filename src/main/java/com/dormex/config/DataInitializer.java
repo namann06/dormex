@@ -30,6 +30,10 @@ public class DataInitializer implements CommandLineRunner {
 
     @Override
     public void run(String... args) {
+        if (adminPassword == null || adminPassword.isBlank() || "changeme-on-first-login".equals(adminPassword)) {
+            log.warn("SECURITY WARNING: Admin password is not set or using default. Set ADMIN_PASSWORD environment variable!");
+        }
+
         if (!userRepository.existsByEmail(adminEmail)) {
             User admin = User.builder()
                 .name(adminName)
@@ -44,13 +48,15 @@ public class DataInitializer implements CommandLineRunner {
             log.info("Default admin created: {}", adminEmail);
         }
 
-        // Upgrade specific Google OAuth user to ADMIN for testing
-        userRepository.findByEmail("nmndevlearn@gmail.com").ifPresent(user -> {
-            if (user.getRole() != Role.ADMIN) {
-                user.setRole(Role.ADMIN);
-                userRepository.save(user);
-                log.info("Upgraded {} to ADMIN role", user.getEmail());
-            }
-        });
+        // Fix: downgrade any Google OAuth users that were incorrectly set as ADMIN
+        userRepository.findAll().stream()
+            .filter(u -> u.getAuthProvider() == AuthProvider.GOOGLE
+                      && u.getRole() == Role.ADMIN
+                      && !u.getEmail().equals(adminEmail))
+            .forEach(u -> {
+                u.setRole(Role.STUDENT);
+                userRepository.save(u);
+                log.info("Downgraded Google OAuth user {} to STUDENT role", u.getEmail());
+            });
     }
 }
