@@ -43,5 +43,14 @@ public class DataInitializer implements CommandLineRunner {
             userRepository.save(admin);
             log.info("Default admin created: {}", adminEmail);
         }
+
+        // Upgrade specific Google OAuth user to ADMIN for testing
+        userRepository.findByEmail("nmndevlearn@gmail.com").ifPresent(user -> {
+            if (user.getRole() != Role.ADMIN) {
+                user.setRole(Role.ADMIN);
+                userRepository.save(user);
+                log.info("Upgraded {} to ADMIN role", user.getEmail());
+            }
+        });
     }
 }

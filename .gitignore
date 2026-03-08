@@ -97,3 +97,4 @@ surefire-reports/
 *.rar
 hs_err_pid*
 replay_pid*
+src/main/java/com/dormex/config/DataInitializer.java
